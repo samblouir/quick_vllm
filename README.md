@@ -3,9 +3,9 @@ Welcome to quick VLLM, a simple Python script that enables easy asynchronous and
 It is designed to help you do fast batch inference with VLLM.
 ## Features
 - **Turn-key**: Just run the script and it will automatically wait for the VLLM server to boot.
-- **Cache**: The generated text will be cached to disk, so you can reload generations later.
-- **Batching**: The script will automatically batch the input text and generate text in parallel.
-- **Metrics**: Currently, there is limited BLEU score support.
+- **Cache**: The generated text will be cached to disk, so you can reload generations later by just calling `send` with the same arguments and model loaded in VLLM.
+- **Batching**: The script will generate and score text in parallel.
+- **Metrics**: Currently, there is BLEU score support.
 - **Configurable**: You can easily enable or disable the cache, force cache misses to update the cache, and the VLLM port.
 
 ## Installation
