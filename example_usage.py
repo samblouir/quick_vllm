@@ -19,8 +19,11 @@ message_responses = qvapi.send(
 	temperature=0.7,
 	top_p=0.95,
 	min_p=0.0,
-	n=16, # Generate 16 responses per message
+	n=2, # Generate 2 responses per message
 )
+
+print(json.dumps(message_responses, indent=2))
+exit()
 
 if just_return_text:
 	for message_responses_idx, (_message_responses) in enumerate(message_responses):

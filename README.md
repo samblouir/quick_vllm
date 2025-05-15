@@ -76,6 +76,39 @@ message_responses = qvapi.batch_send_message(
 )
 ```
 
+By default, this will return a list of dictionaries with the generated text and the settings used.
+```bash
+[
+  [
+    {
+      "text": str, # The generated text from the model
+      "settings": {
+        "extra_body": {
+          "max_tokens": int,
+          "min_p": float,
+          "n": int,
+          "temperature": float,
+          "top_k": int,
+          "top_p": float
+        },
+        "messages": [
+          {
+            "role": str
+            "content": str
+          }
+        ],
+        "model": str
+      }
+    },
+
+	[... 3 more entries in this list]
+  ],
+
+  [ ... Another list of 4 dicts for our second prompt will be here ]
+]
+
+```
+
 #### Example usage of quick_vllm
 ```bash
 python quick_vllm/example_usage.py 
