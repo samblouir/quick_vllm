@@ -75,7 +75,7 @@ message_responses = qvapi.send(
 )
 ```
 
-By default, this will return a list of dictionaries with the generated text and the settings used.
+By default, this will return a nested list of dictionaries with the generated text and the settings used.
 ```bash
 [
   [
