@@ -34,9 +34,8 @@ vllm serve \
 # max_model_len: The maximum sequence length: shared between the context and the generated text.
 ```
 
-### Start Python code
+### Python Usage
 
-#### Example Python code
 ```python
 import quick_vllm.api as qvapi
 
@@ -133,6 +132,8 @@ python quick_vllm/example_usage.py --force_cache_miss 1
 ```bash
 python quick_vllm/example_usage.py --disable_cache 1
 ```
+
+### TODO: Finish adding async.
 
 ## Example Output
 ```markdown
