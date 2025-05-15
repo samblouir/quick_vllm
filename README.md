@@ -65,7 +65,7 @@ msgs = [
 # Otherwise, it returns a list of dictionaries with the full response and settings used
 just_return_text = 0
 
-message_responses = qvapi.batch_send_message(
+message_responses = qvapi.send(
 	msgs,
 	just_return_text=just_return_text,
 	temperature=0.7,
