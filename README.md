@@ -10,12 +10,15 @@ It is designed to help you do fast batch inference with VLLM.
 
 ## Installation
 ```bash
+pip install --upgrade vllm
 pip install git+https://github.com/SamBlouir/quick_vllm.git
 ```
 
 ## Usage
 ### Start VLLM
 ```bash
+
+
 vllm serve \
 	meta-llama/Llama-3.2-1B-Instruct \
 	--tokenizer meta-llama/Llama-3.2-1B-Instruct \ 
