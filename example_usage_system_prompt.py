@@ -4,14 +4,22 @@ import quick_vllm.api as qvapi
 
 # Example usage
 msgs = [
-	"Hi there, how are you?",
-	"The weather is so nice today.",
-	# "Hurray for SLP Sidekick!",
+	[
+		{"role":"system", "content": "You are a helpful assistant."},
+		{"role":"user", "content": "Hi there, how are you?"},
+	],
+
+	[
+		{"role":"system", "content": "You are an assistant who enjoys the sun."},
+		{"role":"user", "content": "The weather is so nice today."},
+	],
 ]
 
+# Set to 1 to just returns a simple list of text responses
+# Otherwise, it returns a list of dictionaries with the full response and settings used
 just_return_text = 0
 
-message_responses = qvapi.batch_send_message(
+message_responses = qvapi.send(
 	msgs,
 	just_return_text=just_return_text,
 	temperature=0.7,
@@ -26,6 +34,7 @@ if just_return_text:
 
 else:
 
+	##################################################################
 	'''
 	Print out the raw responses
 	'''
@@ -45,7 +54,7 @@ else:
 
 
 
-
+	##################################################################
 	'''
 	Just print out the text from the responses
 	'''

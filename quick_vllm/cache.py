@@ -6,14 +6,13 @@ Stores content to TMP_DIR in _config.py
 This allows you to repeat prompts with the same settings and get the same results.
 
 '''
-import _config
+from quick_vllm import _config
 import collections.abc
 import hashlib
 import json
 import numpy as np
 import os
 import pickle
-import sys
 import threading
 import time
 import traceback

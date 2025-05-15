@@ -1,13 +1,12 @@
 from openai import OpenAI
-
 import multiprocessing as mp
 import os
 import traceback
-import cache
 import base64
 import time
 import datetime
 import copy
+from quick_vllm import cache
 from quick_vllm.utils import arg_dict
 
 
@@ -100,7 +99,7 @@ def print_chat(
 pass
 
 def remove_invalid_messages(messages):
-    return [d for d in messages if d.get("content", None) is not None]
+    return [d for d in messages if d.get("content", "") is not None]
 pass
 
 def _run_message(messages, **kwargs):
@@ -150,8 +149,8 @@ def _run_message(messages, **kwargs):
     settings = {k: v for k, v in settings.items() if k in settings_keys_to_keep and k not in allowed_body_kwargs}
         
     cache_settings = {k:v for k, v in settings.items() if k not in ["stream",]}
-    for cache_settings_idx,(key,value) in enumerate(cache_settings.items()):
-        print(f"  cache_settings[{key}]: {value}")
+    # for cache_settings_idx,(key,value) in enumerate(cache_settings.items()):
+    #     print(f"  cache_settings[{key}]: {value}")
         
     out_path = cache.quick_hash(cache_settings)
 
@@ -331,7 +330,7 @@ pass
 
 
 
-def batch_send_message(
+def send(
     msgs,
     max_pool_size=mp.cpu_count(),
     **kwargs,
