@@ -26,7 +26,7 @@ message_responses = qvapi.send(
 	temperature=0.7,
 	top_p=0.95,
 	min_p=0.0,
-	n=64, # Generate 4 responses per message
+	n=64, # Generate 64 responses per message
 )
 
 for idx in range(len(message_responses)):
