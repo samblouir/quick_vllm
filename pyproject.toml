@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "quick_vllm"
+version = "0.1.0"
+description = "A package for interfacing with vllm in an asynchronous and batched way"
+readme = "README.md"
+requires-python = ">=3.6"
+license = {file = "LICENSE"}
+dependencies = [
+    "openai",
+    "tqdm",
+    "numpy",
+    "transformers"
+]
+
+[project.urls]
+Homepage = "https://github.com/samblouir/quick_vllm"
+Repository = "https://github.com/samblouir/quick_vllm"
+
+[tool.setuptools.packages.find]
+where = ["."]

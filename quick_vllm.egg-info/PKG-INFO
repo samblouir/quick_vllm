@@ -1,0 +1,15 @@
+Metadata-Version: 2.4
+Name: quick_vllm
+Version: 0.1.0
+Summary: A package for interfacing with vllm in an asynchronous and batched way
+License: hi
+Project-URL: Homepage, https://github.com/samblouir/quick_vllm
+Project-URL: Repository, https://github.com/samblouir/quick_vllm
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: openai
+Requires-Dist: tqdm
+Requires-Dist: numpy
+Requires-Dist: transformers
+Dynamic: license-file
