@@ -9,14 +9,17 @@ msgs = [
 ]
 
 labels = [
+	# List of possible correct translations
 	[
 		"¡Hola! ¡Podemos escuchar la cascada!",
 		"¡Guau! ¡Podemos escuchar la cascada!",
 		"¡Guau! ¡Podemos oír la cascada!",
 		"¡Guau! ¡Podemos escuchar la catarata!",
 		"¡Guau! ¡Podemos oír la catarata!",
-	], # List of possible correct translations
+	], 
 ]
+
+
 
 just_return_text = 1
 

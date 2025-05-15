@@ -15,7 +15,7 @@ msgs = [
 	],
 ]
 
-# Set to 1 to just returns a simple list of text responses
+# Set this to 1 to just returns a simple list of text responses
 # Otherwise, it returns a list of dictionaries with the full response and settings used
 just_return_text = 0
 
