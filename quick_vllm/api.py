@@ -69,6 +69,9 @@ def print_chat(
             value = value["text"]
         else:
             value = "".join(value)
+        
+        if not len(value):
+            continue
 
         if only_box:
             if "<box>" in value and "</box>" in value:

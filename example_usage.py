@@ -19,7 +19,7 @@ message_responses = qvapi.send(
 	temperature=0.7,
 	top_p=0.95,
 	min_p=0.0,
-	n=4, # Generate 4 responses per message
+	n=16, # Generate 4 responses per message
 )
 
 if just_return_text:
