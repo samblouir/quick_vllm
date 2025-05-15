@@ -88,11 +88,12 @@ By default, this will return a nested list of dictionaries with the generated te
           "n": int,
           "temperature": float,
           "top_k": int,
-          "top_p": float
+          "top_p": float,
+		  "[anything else you used]": dtype
         },
         "messages": [
           {
-            "role": str
+            "role": str,
             "content": str
           }
         ],
