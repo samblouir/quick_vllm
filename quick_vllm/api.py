@@ -270,7 +270,7 @@ def _run_message(messages, **kwargs):
         responses = [v for v in responses.values()]
         [r.pop("stream", None) for r in responses]
 
-        if int(arg_dict.get("use_cache", 1)):
+        if int(arg_dict.get("use_cache", 0)):
             cache.quick_save(responses, out_path)
 
         return responses
