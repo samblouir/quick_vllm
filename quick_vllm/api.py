@@ -109,7 +109,8 @@ def _run_message(messages, **kwargs):
     timeout_retry_delay_interval = 5
     kwargs = copy.deepcopy(kwargs)
     stream = kwargs.pop("stream", True)
-    silent = kwargs.pop("silent", False) # set to False to print and stream responses from the model as they are generated
+    # silent = kwargs.pop("silent", False) # set to False to print and stream responses from the model as they are generated
+    silent = kwargs.pop("silent", True) # set to False to print and stream responses from the model as they are generated
     client = kwargs.pop("client", None)
     force_cache_miss = kwargs.pop("force_cache_miss", False)
     messages = remove_invalid_messages(messages)
