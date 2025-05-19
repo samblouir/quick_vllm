@@ -173,13 +173,12 @@ class VLLMClient:
 
         max_pool_size = min(max_pool_size or _mp.cpu_count(), len(msgs))
         # pool = _mp.Pool(processes=max_pool_size)
+        def m(m, **kwargs):
+            return self.send_message(m, **kwargs)
         pool = _mp.pool.ThreadPool(processes=max_pool_size)
 
         try:
-            return pool.map(
-                lambda m: self.send_message(m, **kwargs),  # noqa: E731
-                msgs,
-            )
+            return pool.map(m, msgs,)
         finally:
             pool.close()
             pool.join()
