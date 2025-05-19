@@ -172,7 +172,8 @@ class VLLMClient:
             msgs = [msgs]
 
         max_pool_size = min(max_pool_size or _mp.cpu_count(), len(msgs))
-        pool = _mp.Pool(processes=max_pool_size)
+        # pool = _mp.Pool(processes=max_pool_size)
+        pool = _mp.pool.ThreadPool(processes=max_pool_size)
 
         try:
             return pool.map(
