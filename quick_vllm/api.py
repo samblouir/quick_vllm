@@ -343,9 +343,9 @@ def send(
         msgs = [msgs]
 
     max_pool_size = min(max_pool_size, len(msgs))
-    # pool = mp.Pool(processes=max_pool_size)
+    pool = mp.Pool(processes=max_pool_size)
 
-    pool = mp.pool.ThreadPool(processes=max_pool_size)
+    # pool = mp.pool.ThreadPool(processes=max_pool_size)
 
         
     msgs_with_kwargs = [dict(msg=msg, kwargs=kwargs) for msg in msgs]
