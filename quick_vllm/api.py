@@ -108,6 +108,9 @@ pass
 def _run_message(messages, **kwargs):
     timeout_retry_delay_interval = 5
     kwargs = copy.deepcopy(kwargs)
+    cache_dir = kwargs.pop("cache_dir", None)
+    if cache_dir is not None:
+        _config.set_TMP_DIR(cache_dir)
     stream = kwargs.pop("stream", True)
     # silent = kwargs.pop("silent", False) # set to False to print and stream responses from the model as they are generated
     silent = kwargs.pop("silent", True) # set to False to print and stream responses from the model as they are generated
@@ -171,7 +174,7 @@ def _run_message(messages, **kwargs):
             # Global disable cache from when the Python script is run with disable_cache=1
             raise Exception("Force cache miss")
         
-        output = cache.quick_load(out_path)
+        output = cache.quick_load(out_path, cache_dir=cache_dir)
         
         if not isinstance(output, list):
             # Error detected
@@ -245,7 +248,7 @@ def _run_message(messages, **kwargs):
             }
 
             if not int(arg_dict.get("disable_cache", 0)):
-                cache.quick_save(responses, out_path)
+                cache.quick_save(responses, out_path, cache_dir=cache_dir)
 
             return responses
         
@@ -272,7 +275,7 @@ def _run_message(messages, **kwargs):
         [r.pop("stream", None) for r in responses]
 
         if int(arg_dict.get("use_cache", 0)):
-            cache.quick_save(responses, out_path)
+            cache.quick_save(responses, out_path, cache_dir=cache_dir)
 
         return responses
 pass
@@ -282,6 +285,7 @@ pass
 def send_message(
     msg,
     system_prompt=None,
+    cache_dir: str | None = None,
     **kwargs,
 ):
     if isinstance(msg, str):
@@ -294,7 +298,8 @@ def send_message(
 
     response = _run_message(
         msgs,
-        model=get_mdl(), # Gets the mdl each generation, in case the loaded model has changed in VLLM
+        model=get_mdl(),  # Gets the mdl each generation, in case the loaded model has changed in VLLM
+        cache_dir=cache_dir,
         **kwargs,
     )
     return response

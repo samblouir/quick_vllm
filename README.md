@@ -7,13 +7,13 @@ Welcome to **quick VLLM**, a slim Python wrapper that makes talking to a
 
 ## Features
 
-| Feature                           | Description                                                                                         |
+| Feature                           | Description |
 | --------------------------------- | --------------------------------------------------------------------------------------------------- |
-| **Turn-key**                      | Automatically waits for the vLLM server to boot before sending the first request.                   |
+| **Turn-key**                      | Automatically waits for the vLLM server to boot before sending the first request. |
 | **Cache**                         | Generated text is cached on disk; re-running the same call with the same settings is instantaneous. |
-| **Batching**                      | Built-in multiprocessing lets you hit high throughput with a single function call.                  |
-| **Metrics**                       | BLEU score utilities out of the box.                                                                |
-| **Configurable**                  | Control cache behaviour and port with CLI flags or environment variables.                           |
+| **Batching**                      | Built-in multiprocessing lets you hit high throughput with a single function call. |
+| **Metrics**                       | BLEU score utilities out of the box. |
+| **Configurable**                  | Control cache behaviour and port with CLI flags or environment variables. |
 | **Multi-host support (NEW)**      | The new `VLLMClient` class lets you spin up *multiple* clients, each with its own host/port, in one script. |
 
 ---
@@ -88,17 +88,19 @@ print(east.send(batch, just_return_text=True))        # multiprocess batching st
 ```
 
 Both the functional helpers and the class share the *same* cache directory, so
-you can mix and match freely.
+you can mix and match freely. Pass `cache_dir="/path/to/cache"` to override the
+default location.
 
 ---
 
 ## Settings quick-reference
 
-| Flag / env var         | Effect                                                        |
+| Flag / env var         | Effect |
 | ---------------------- | ------------------------------------------------------------- |
-| `--port 8000`          | Point *functional* helpers (`send`, …) at a different port.   |
+| `--port 8000`          | Point *functional* helpers (`send`, …) at a different port. |
 | `--force_cache_miss 1` | Ignore cached generations *and* overwrite with fresh results. |
-| `--disable_cache 1`    | Bypass cache entirely (no load, no save).                     |
+| `--disable_cache 1`    | Bypass cache entirely (no load, no save). |
+| `cache_dir=/path`      | Write cache files to this directory. |
 
 > **Note**
 > For `VLLMClient` objects just pass `port` / `host` to the constructor. The

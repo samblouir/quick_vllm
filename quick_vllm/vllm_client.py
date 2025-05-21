@@ -121,8 +121,11 @@ class VLLMClient:
         force_cache_miss: bool = False,
         just_return_text: bool = False,
         silent: bool = True,
+        cache_dir: str | None = None,
         **kw: Any,
     ) -> Any:
+        if cache_dir is not None:
+            _config.set_TMP_DIR(cache_dir)
         if isinstance(msg, str):
             messages = [
                 {"role": "system", "content": system_prompt},
@@ -142,7 +145,7 @@ class VLLMClient:
             "extra_body": sampling,
         }
 
-        return self._run(settings, force_cache_miss, silent, just_return_text)
+        return self._run(settings, force_cache_miss, silent, just_return_text, cache_dir)
 
     # ------------------------------------------------------------------
     def send(
@@ -184,13 +187,16 @@ class VLLMClient:
         force_cache_miss: bool,
         silent: bool,
         just_return_text: bool,
+        cache_dir: str | None = None,
     ) -> Any:
+        if cache_dir is not None:
+            _config.set_TMP_DIR(cache_dir)
         cache_key = {k: v for k, v in settings.items() if k != "stream"}
         cache_path = cache.quick_hash(cache_key)
 
         if not (force_cache_miss or int(arg_dict.get("disable_cache", 0))):
             try:
-                cached = cache.quick_load(cache_path)
+                cached = cache.quick_load(cache_path, cache_dir=cache_dir)
                 if isinstance(cached, list) and cached:
                     return [c["text"] for c in cached] if just_return_text else cached
             except Exception:
@@ -227,7 +233,7 @@ class VLLMClient:
         ]
 
         if not int(arg_dict.get("disable_cache", 0)):
-            cache.quick_save(packaged, cache_path)
+            cache.quick_save(packaged, cache_path, cache_dir=cache_dir)
 
         return texts if just_return_text else packaged
 
