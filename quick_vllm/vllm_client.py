@@ -16,7 +16,7 @@ import datetime as _dt
 import multiprocessing as mp
 import time
 from typing import Any, Iterable
-
+import traceback
 from openai import OpenAI
 
 from quick_vllm import cache  # type: ignore
@@ -99,14 +99,23 @@ class VLLMClient:
     # ------------------------------------------------------------------
     def _model_id(self) -> str:
         while self._mdl is None:
+            counter = 0
             try:
                 self._mdl = self.client.models.list()[0].id
             except Exception as exc:
-                print(
-                    f"[{_dt.datetime.now():%Y-%m-%d %H:%M:%S}] {self.base_url}: \n"
-                    f"  retrying /models after error -> {exc}"
-                )
-                time.sleep(1)
+                
+                try:
+                    self._mdl = self.client.models.list().data[0].id
+                    break
+                except Exception as exc2:
+                    traceback.print_exc()
+                    print(
+                        f"[{_dt.datetime.now():%Y-%m-%d %H:%M:%S}] {self.base_url}: \n"
+                        f"  retrying /models after error -> {exc}"
+                    )
+                    traceback.print_exc()
+                    time.sleep(1)
+                    
         return self._mdl
 
     # ------------------------------------------------------------------
