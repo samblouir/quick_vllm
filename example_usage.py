@@ -1,6 +1,7 @@
 
 import json
 import quick_vllm.api as qvapi
+import os # Added for path manipulation
 
 # Example usage
 msgs = [
@@ -13,6 +14,12 @@ msgs = [
 # Otherwise, it returns a list of dictionaries with the full response and settings used
 just_return_text = 0
 
+# Define a custom cache directory
+custom_cache_path = "./my_custom_cache_dir_example" 
+# Or use an absolute path: custom_cache_path = "/tmp/my_quick_vllm_cache_example"
+print(f"Example will use custom cache directory: {os.path.abspath(custom_cache_path)}")
+
+
 message_responses = qvapi.send(
 	msgs,
 	just_return_text=just_return_text,
@@ -20,8 +27,10 @@ message_responses = qvapi.send(
 	top_p=0.95,
 	min_p=0.0,
 	n=2, # Generate 2 responses per message
+	cache_dir=custom_cache_path, # New cache_dir parameter: specifies a custom directory for this call's cache
 )
 
+print(f"Cache for this run should be in: {os.path.abspath(custom_cache_path)}")
 print(json.dumps(message_responses, indent=2))
 exit()
 

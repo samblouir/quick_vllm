@@ -32,15 +32,43 @@ def safe_clear_key(key):
 			ret_vals.append(safe_clear_key(k))
 		return ret_vals
 
-def cached_func(func,key="",args=None,flush_cache=False,**kwargs):
-	md5_key = quick_md5_of_object(key)
-	unique_key = f"{func.__name__}_{md5_key}"
-	args=[] if args is None else args
-	if not quick_check(unique_key) or flush_cache:
-		result = func(*args,**kwargs,)
-		quick_save(result, out_path=unique_key)
-	ret_val = quick_load(in_path=unique_key,)
-	return ret_val
+def cached_func(func=None, key="", flush_cache=False, cache_dir=None):
+    """
+    A decorator to cache the results of a function.
+    The cache key is determined by the function name, the 'key' argument provided
+    to the decorator, and the arguments passed to the decorated function at call time.
+    """
+    if func is None:
+        # Allows using @cached_func(key="...", cache_dir="...")
+        return lambda f: cached_func(f, key=key, flush_cache=flush_cache, cache_dir=cache_dir)
+
+    def wrapper(*args, **kwargs):
+        # Combine the initial key (if any) with call-time args/kwargs for a more specific cache key
+        call_specific_key_parts = [str(key)] # Start with the decorator's base key
+        
+        # Add positional arguments to the key
+        for arg in args:
+            # Convert arg to a string representation for the key
+            # For complex objects, might need a more robust serialization than str()
+            call_specific_key_parts.append(str(arg)) 
+        
+        # Add keyword arguments to the key, sorted for consistency
+        for k_kwarg, v_kwarg in sorted(kwargs.items()):
+            call_specific_key_parts.append(f"{k_kwarg}={v_kwarg}")
+        
+        combined_key_str = "_".join(call_specific_key_parts)
+        md5_key_part = quick_md5_of_object(combined_key_str) # Use the combined string for MD5
+        unique_key = f"{func.__name__}_{md5_key_part}"
+
+        final_cache_dir = cache_dir # Use cache_dir passed to decorator, or None for default
+
+        if not quick_check(unique_key, cache_dir=final_cache_dir, generate_path=True) or flush_cache:
+            result = func(*args, **kwargs)
+            quick_save(result, out_path=unique_key, cache_dir=final_cache_dir, generate_path=True)
+        
+        return quick_load(in_path=unique_key, cache_dir=final_cache_dir, generate_path=True)
+    
+    return wrapper
 
 def cache_path_gen(in_str):
 	if '/' in in_str:
@@ -133,28 +161,33 @@ def quick_check(in_path, generate_path=True):
 	return os.path.exists(in_path)
 
 
-def quick_path_gen(in_obj_name,clean_slashes=True,):
+def quick_path_gen(in_obj_name, clean_slashes=True, base_cache_dir=None):
 	## Clean off extra slashes
 	if clean_slashes:
-		in_obj_name = in_obj_name.rsplit("/", 1)[-1]    
+		in_obj_name = in_obj_name.rsplit("/", 1)[-1]
 
-	return f"{_config.TMP_DIR}/{in_obj_name}.cache"
+	base_dir = base_cache_dir if base_cache_dir is not None else _config.TMP_DIR
+	
+	# Ensure the directory exists
+	os.makedirs(base_dir, exist_ok=True)
 
-def quick_check(in_path, generate_path=True):
+	return f"{base_dir}/{in_obj_name}.cache"
+
+def quick_check(in_path, generate_path=True, cache_dir=None): # Added cache_dir
 	if generate_path:
-		in_path = quick_path_gen(in_path)
+		in_path = quick_path_gen(in_path, base_cache_dir=cache_dir) # Pass cache_dir
 
 	return os.path.exists(in_path)
 
 
-def _quick_save(in_obj, out_path=None, generate_path=True, store_in_tmp=True, ):
+def _quick_save(in_obj, out_path=None, generate_path=True, store_in_tmp=True, cache_dir=None): # Added cache_dir
 	# if out_path is None and type(in_obj) == str:
 	#     out_path = in_obj
 	if isinstance(type(in_obj), str) and (not isinstance(type(out_path), str)):
 		(in_obj, out_path) = (out_path, in_obj)
 		
 	if generate_path:
-		out_path = quick_path_gen(out_path)
+		out_path = quick_path_gen(out_path, base_cache_dir=cache_dir) # Pass cache_dir
 	else:
 		base_dir = os.path.dirname(out_path)
 		if not os.path.exists(base_dir):
@@ -181,13 +214,13 @@ def _quick_save(in_obj, out_path=None, generate_path=True, store_in_tmp=True, ):
 	# print(f"Quick saved to \"{out_path}\"! (type(in_obj): {type(in_obj)})")
 	return out_path
 
-def quick_save(in_obj, out_path=None, generate_path=True, store_in_tmp=True, ):
+def quick_save(in_obj, out_path=None, generate_path=True, store_in_tmp=True, cache_dir=None): # Added cache_dir
 	try:
 		assert(isinstance(out_path, str))
-		_quick_save(in_obj=in_obj, out_path=out_path, generate_path=generate_path, store_in_tmp=store_in_tmp,)
+		_quick_save(in_obj=in_obj, out_path=out_path, generate_path=generate_path, store_in_tmp=store_in_tmp, cache_dir=cache_dir) # Pass cache_dir
 	except:
 		print(f"  WARNING:  cache.py  quick_save() exception!  out_path is not a string.", flush=True,)
-		_quick_save(in_obj=out_path, out_path=in_obj, generate_path=generate_path, store_in_tmp=store_in_tmp,)
+		_quick_save(in_obj=out_path, out_path=in_obj, generate_path=generate_path, store_in_tmp=store_in_tmp, cache_dir=cache_dir) # Pass cache_dir
 
 
 
@@ -264,13 +297,13 @@ def async_save(in_obj, out_path=None, generate_path=True, store_in_tmp=True, ):
 		thread.start()
 	except Exception as e:
 		print(f"  WARNING:  cache.py  async_save() exception!  Running synchronously... e: {e}")
-		quick_save(in_obj, out_path, generate_path, store_in_tmp,)
+		quick_save(in_obj, out_path, generate_path, store_in_tmp, cache_dir=getattr(threading.current_thread(), 'cache_dir', None)) # Pass cache_dir from thread local or None
 
 	return thread
 
-def quick_load(in_path, generate_path=True, default_value=None, silent=0,):
+def quick_load(in_path, generate_path=True, default_value=None, silent=0, cache_dir=None): # Added cache_dir
 	if generate_path:
-		in_path = quick_path_gen(in_path)
+		in_path = quick_path_gen(in_path, base_cache_dir=cache_dir) # Pass cache_dir
 
 	if os.path.exists(in_path):
 		# if not silent:
@@ -283,6 +316,8 @@ def quick_load(in_path, generate_path=True, default_value=None, silent=0,):
 			# if not silent:
 			# 	print(f"  cache.quick_load():  Finished loading from \"{in_path}\"!", flush=True,)
 	else:
+		if default_value is not None:
+			return default_value
 		raise Exception(f"quick_load({in_path}) failed: File does not exist.")
 
 
