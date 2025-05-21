@@ -105,7 +105,7 @@ def remove_invalid_messages(messages):
     return [d for d in messages if d.get("content", "") is not None]
 pass
 
-def _run_message(messages, **kwargs):
+def _run_message(messages, cache_dir=None, **kwargs): # Added cache_dir
     timeout_retry_delay_interval = 5
     kwargs = copy.deepcopy(kwargs)
     stream = kwargs.pop("stream", True)
@@ -171,7 +171,7 @@ def _run_message(messages, **kwargs):
             # Global disable cache from when the Python script is run with disable_cache=1
             raise Exception("Force cache miss")
         
-        output = cache.quick_load(out_path)
+        output = cache.quick_load(out_path, cache_dir=cache_dir) # Pass cache_dir
         
         if not isinstance(output, list):
             # Error detected
@@ -245,7 +245,7 @@ def _run_message(messages, **kwargs):
             }
 
             if not int(arg_dict.get("disable_cache", 0)):
-                cache.quick_save(responses, out_path)
+                cache.quick_save(responses, out_path, cache_dir=cache_dir) # Pass cache_dir
 
             return responses
         
@@ -272,7 +272,7 @@ def _run_message(messages, **kwargs):
         [r.pop("stream", None) for r in responses]
 
         if int(arg_dict.get("use_cache", 0)):
-            cache.quick_save(responses, out_path)
+            cache.quick_save(responses, out_path, cache_dir=cache_dir) # Pass cache_dir
 
         return responses
 pass
@@ -282,6 +282,7 @@ pass
 def send_message(
     msg,
     system_prompt=None,
+    cache_dir=None, # Added cache_dir
     **kwargs,
 ):
     if isinstance(msg, str):
@@ -295,6 +296,7 @@ def send_message(
     response = _run_message(
         msgs,
         model=get_mdl(), # Gets the mdl each generation, in case the loaded model has changed in VLLM
+        cache_dir=cache_dir, # Pass cache_dir
         **kwargs,
     )
     return response
@@ -318,13 +320,15 @@ def _batch_send_message_wrapper(d):
     kwargs = d.get("kwargs", {})
     force_cache_miss = kwargs.get("force_cache_miss", 0)
     just_return_text = kwargs.get("just_return_text", 0)
+    cache_dir = kwargs.pop("cache_dir", None) # Extract cache_dir, remove from kwargs
 
     if force_cache_miss:
         _send_message = send_message_no_cache
     else:
         _send_message = send_message
-
-    response = _send_message(msg, **kwargs,)
+    
+    # Pass cache_dir to _send_message. send_message_no_cache will also accept cache_dir but ignore it internally if needed.
+    response = _send_message(msg, cache_dir=cache_dir, **kwargs,) 
     
     if just_return_text:
         return [r["text"] for r in response]
@@ -337,6 +341,7 @@ pass
 def send(
     msgs,
     max_pool_size=mp.cpu_count(),
+    cache_dir=None, # Added cache_dir
     **kwargs,
 ):
     if isinstance(msgs, str):
@@ -347,8 +352,9 @@ def send(
 
     # pool = mp.pool.ThreadPool(processes=max_pool_size)
 
-        
-    msgs_with_kwargs = [dict(msg=msg, kwargs=kwargs) for msg in msgs]
+    # Include cache_dir in the kwargs for each message
+    current_call_kwargs = {**kwargs, "cache_dir": cache_dir}
+    msgs_with_kwargs = [dict(msg=msg, kwargs=current_call_kwargs) for msg in msgs]
     responses = pool.map(_batch_send_message_wrapper, msgs_with_kwargs)
 
     pool.close()
