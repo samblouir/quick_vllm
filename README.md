@@ -69,6 +69,16 @@ responses = send(
 print(responses)
 ```
 
+Need asynchronous results?  Use `async_=True` or the
+convenience wrapper `send_async`:
+
+```python
+handle = send(msgs, async_=True)
+responses = handle.get()
+# Equivalent
+responses2 = send_async(msgs).get()
+```
+
 ### 2 • Object-oriented client
 
 Need to hit multiple vLLM back-ends in the same programme?  Use the
