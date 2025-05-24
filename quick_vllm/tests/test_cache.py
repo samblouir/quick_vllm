@@ -4,6 +4,8 @@ import shutil
 import tempfile
 import pickle
 import multiprocessing as mp
+import io
+import contextlib
 from unittest.mock import patch, MagicMock
 
 from quick_vllm import cache
@@ -234,6 +236,25 @@ class TestCacheFunctionality(unittest.TestCase):
             results = [item.get() for item in handle]
 
         self.assertEqual(results, [f"resp_{m}" for m in messages])
+
+    def test_async_send_stream_print_uses_threadpool(self):
+        messages = ["x", "y"]
+
+        printed = io.StringIO()
+
+        def fake_wrapper(d):
+            print("tok", end="", flush=True)
+            return f"resp_{d['msg']}"
+
+        with patch("quick_vllm.api._batch_send_message_wrapper", side_effect=fake_wrapper), \
+             patch("quick_vllm.api.mp_pool.ThreadPool", mp.pool.ThreadPool), \
+             patch("multiprocessing.Pool", side_effect=AssertionError("Pool should not be used")), \
+             contextlib.redirect_stdout(printed):
+            handle = api.send_async(messages, stream_print=True)
+            result = handle.get()
+
+        self.assertEqual(result, [f"resp_{m}" for m in messages])
+        self.assertEqual(printed.getvalue(), "tok" * len(messages))
 
 
 if __name__ == '__main__':
