@@ -14,7 +14,11 @@ import multiprocessing as mp
 import time
 from typing import Any, Dict, Iterable, List, Optional
 
-from openai import OpenAI
+try:
+    from openai import OpenAI
+except Exception:  # pragma: no cover - optional dependency
+    class OpenAI:  # type: ignore
+        pass
 from quick_vllm import cache  # type: ignore
 from quick_vllm.utils import arg_dict  # type: ignore
 

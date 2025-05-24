@@ -1,4 +1,8 @@
-from openai import OpenAI
+try:
+    from openai import OpenAI
+except Exception:  # pragma: no cover - optional dependency
+    class OpenAI:  # type: ignore
+        pass
 import multiprocessing as mp
 import os
 import traceback
@@ -338,10 +342,25 @@ pass
 
 
 
+class _AsyncSendResult:
+    """Handle for asynchronous :func:`send` calls."""
+
+    def __init__(self, async_result, pool):
+        self._async_result = async_result
+        self._pool = pool
+
+    def get(self, *args, **kwargs):
+        result = self._async_result.get(*args, **kwargs)
+        self._pool.join()
+        return result
+
+
 def send(
     msgs,
     max_pool_size=mp.cpu_count(),
-    cache_dir=None, # Added cache_dir
+    cache_dir=None,  # Added cache_dir
+    *,
+    async_=False,
     **kwargs,
 ):
     if isinstance(msgs, str):
@@ -350,16 +369,18 @@ def send(
     max_pool_size = min(max_pool_size, len(msgs))
     pool = mp.Pool(processes=max_pool_size)
 
-    # pool = mp.pool.ThreadPool(processes=max_pool_size)
-
     # Include cache_dir in the kwargs for each message
     current_call_kwargs = {**kwargs, "cache_dir": cache_dir}
     msgs_with_kwargs = [dict(msg=msg, kwargs=current_call_kwargs) for msg in msgs]
-    responses = pool.map(_batch_send_message_wrapper, msgs_with_kwargs)
 
+    if async_:
+        async_result = pool.map_async(_batch_send_message_wrapper, msgs_with_kwargs)
+        pool.close()
+        return _AsyncSendResult(async_result, pool)
+
+    responses = pool.map(_batch_send_message_wrapper, msgs_with_kwargs)
     pool.close()
     pool.join()
-
     return responses
 pass
 

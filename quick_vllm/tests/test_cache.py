@@ -3,6 +3,7 @@ import os
 import shutil
 import tempfile
 import pickle
+import multiprocessing as mp
 from unittest.mock import patch, MagicMock
 
 from quick_vllm import cache
@@ -203,6 +204,21 @@ class TestCacheFunctionality(unittest.TestCase):
         
         # Assert that the mocked API (client.chat.completions.create) was NOT called this time
         mock_client_instance.chat.completions.create.assert_not_called()
+
+    def test_async_send_returns_same_result(self):
+        messages = ["a", "b", "c"]
+
+        def fake_wrapper(d):
+            return f"resp_{d['msg']}"
+
+        with patch("quick_vllm.api._batch_send_message_wrapper", side_effect=fake_wrapper), \
+             patch("multiprocessing.Pool", mp.pool.ThreadPool):
+            sync_result = api.send(messages)
+            handle = api.send(messages, async_=True)
+            async_result = handle.get()
+
+        self.assertEqual(async_result, sync_result)
+        self.assertEqual(async_result, [f"resp_{m}" for m in messages])
 
 
 if __name__ == '__main__':
