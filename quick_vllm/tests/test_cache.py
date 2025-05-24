@@ -4,6 +4,8 @@ import shutil
 import tempfile
 import pickle
 import multiprocessing as mp
+import io
+import contextlib
 from unittest.mock import patch, MagicMock
 import io
 from contextlib import redirect_stdout
@@ -257,6 +259,7 @@ class TestCacheFunctionality(unittest.TestCase):
 
         self.assertIn("TOK", output)
         self.assertEqual(result, ["resp_hi"])
+
 
 
 if __name__ == '__main__':
