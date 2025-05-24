@@ -389,6 +389,7 @@ def send(
     cache_dir=None,  # Added cache_dir
     *,
     async_=False,
+    stream_print=False,
     **kwargs,
 ):
     if isinstance(msgs, str):
@@ -399,7 +400,13 @@ def send(
 
     # Include cache_dir in the kwargs for each message
     current_call_kwargs = {**kwargs, "cache_dir": cache_dir}
-    msgs_with_kwargs = [dict(msg=msg, kwargs=current_call_kwargs) for msg in msgs]
+
+    msgs_with_kwargs = []
+    for idx, msg in enumerate(msgs):
+        item_kwargs = dict(current_call_kwargs)
+        if stream_print and "silent" not in item_kwargs:
+            item_kwargs["silent"] = idx != 0
+        msgs_with_kwargs.append(dict(msg=msg, kwargs=item_kwargs))
 
     if async_:
         async_results = [
@@ -416,13 +423,14 @@ def send(
 pass
 
 
-def send_async(msgs, max_pool_size=mp.cpu_count(), cache_dir=None, **kwargs):
+def send_async(msgs, max_pool_size=mp.cpu_count(), cache_dir=None, stream_print=False, **kwargs):
     """Convenience wrapper around :func:`send` with ``async_=True``."""
     return send(
         msgs,
         max_pool_size=max_pool_size,
         cache_dir=cache_dir,
         async_=True,
+        stream_print=stream_print,
         **kwargs,
     )
 

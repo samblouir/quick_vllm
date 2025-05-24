@@ -14,6 +14,7 @@ import base64
 import copy
 import datetime as _dt
 import multiprocessing as mp
+import os
 import time
 from typing import Any, Iterable
 import traceback
@@ -21,7 +22,7 @@ from openai import OpenAI
 
 from quick_vllm import cache  # type: ignore
 from quick_vllm.utils import arg_dict  # type: ignore
-from quick_vllm.api import _AsyncSendResult
+from quick_vllm.api import _AsyncSendResult, print_chat
 
 __all__ = ["VLLMClient"]
 
@@ -166,6 +167,7 @@ class VLLMClient:
         *,
         max_pool_size: int | None = None,
         async_: bool = False,
+        stream_print: bool = False,
         **kwargs: Any,
     ) -> list[Any] | Any:
         """Multiprocessing batch helper (now pickle‑safe)."""
@@ -181,10 +183,14 @@ class VLLMClient:
             "port": self.port,
             "mdl": self._model_id(),
             "dsp": self.default_sampling_parameters,
-            "kwargs": kwargs,
         }
 
-        args = [{**common, "msg": m} for m in msgs]
+        args = []
+        for idx, m in enumerate(msgs):
+            kw = dict(kwargs)
+            if stream_print and "silent" not in kw:
+                kw["silent"] = idx != 0
+            args.append({**common, "msg": m, "kwargs": kw})
 
         if async_:
             async_results = [
@@ -204,6 +210,7 @@ class VLLMClient:
         msgs: str | Iterable[str],
         *,
         max_pool_size: int | None = None,
+        stream_print: bool = False,
         **kwargs: Any,
     ) -> _AsyncSendResult:
         """Convenience wrapper for :meth:`send` with ``async_=True``."""
@@ -211,6 +218,7 @@ class VLLMClient:
             msgs,
             max_pool_size=max_pool_size,
             async_=True,
+            stream_print=stream_print,
             **kwargs,
         )
 
@@ -249,11 +257,28 @@ class VLLMClient:
 
         if settings["stream"]:
             chunks: dict[int, list[str]] = {}
-            for chunk in completion:
-                choice = chunk.choices[0]
-                if choice.delta.content is not None:
-                    chunks.setdefault(choice.index, []).append(choice.delta.content)
+            while True:
+                try:
+                    for chunk in completion:
+                        choice = chunk.choices[0]
+                        if choice.delta.content is not None:
+                            chunks.setdefault(choice.index, []).append(choice.delta.content)
+                        if not silent:
+                            print_chat(chunks)
+                        continue
+                    break
+                except Exception as exc:
+                    print(f"{__file__}: streaming error -> {exc}")
+                    traceback.print_exc()
+                    time.sleep(1)
+
             texts = ["".join(v) for _, v in sorted(chunks.items())]
+            if not silent:
+                os.system("clear")
+                print_chat(chunks, only_thinking=True)
+                print("#" * 60)
+                print("#" * 60)
+                print_chat(chunks, clear_thinking=True)
         else:
             texts = [c.message.content or "" for c in completion.choices]
 
