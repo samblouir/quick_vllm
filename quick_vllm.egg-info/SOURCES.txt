@@ -6,6 +6,7 @@ quick_vllm/_config.py
 quick_vllm/api.py
 quick_vllm/cache.py
 quick_vllm/metrics.py
+quick_vllm/trl_client.py
 quick_vllm/utils.py
 quick_vllm/vllm_args.py
 quick_vllm/vllm_client.py

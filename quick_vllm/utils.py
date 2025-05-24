@@ -1,6 +1,8 @@
 import sys
 
-arg_dict = {}
+arg_dict = {
+	"disable_cache": 1,
+}
 for arg in sys.argv:
 	if "=" in arg:
 		arg_name, arg_value = arg.split("=")

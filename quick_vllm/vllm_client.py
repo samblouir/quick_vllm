@@ -81,8 +81,13 @@ class VLLMClient:
     ) -> None:
         self.host = host
         self.port = int(port)
+        if self.host.startswith("http://") or self.host.startswith("https://"):
+            raise ValueError(
+                "Please provide only the host name (without protocol), "
+                "e.g. 'localhost' or '127.0.0.1'"
+            )
         self.base_url = f"http://{self.host}:{self.port}/v1/"
-        self.client = OpenAI(base_url=self.base_url, api_key="vllm")
+        self.client = OpenAI(base_url=self.base_url, api_key="vllm")        
 
         self._mdl: str | None = mdl  # resolved lazily
 

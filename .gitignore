@@ -1,2 +1,39 @@
-tmp/
 ptg.sh
+tmp/
+__pypackages__/
+.DS_Store
+.env
+.hypothesis/
+.idea/
+.ipynb_checkpoints/
+.pypirc             # PyPI credentials
+.ropeproject
+.spyderproject
+.spyproject
+.venv
+.vscode/
+.webassets-cache/   # Flask-Assets
+*.egg
+*.log
+*.manifest
+*.py[cod]
+*.so
+*.spec
+*$py.class
+build/
+celerybeat-schedule
+celerybeat.pid
+dist/
+env.bak/
+env/
+ENV/
+instance/           # Flask’s per-deploy config
+local_settings.py   # Django pattern for secrets
+MANIFEST
+pip-delete-this-directory.txt
+pip-log.txt
+share/python-wheels/
+Thumbs.db
+venv.bak/
+venv/
+wheels/

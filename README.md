@@ -1,7 +1,7 @@
 # Quick VLLM
 
 Welcome to **quick VLLM**, a slim Python wrapper that makes talking to a
-[vLLM](https://github.com/vllm-project/vllm) server easier.
+[vLLM](https://github.com/vllm-project/vllm) or [LM Studio](https://lmstudio.ai/) server easier.
 
 ---
 
@@ -99,6 +99,27 @@ print(west.send_message("Ping west", just_return_text=True))
 
 batch = ["Explain quantum tunnelling in 2 lines.", "Write a haiku about GPU fans."]
 print(east.send(batch, just_return_text=True))        # multiprocess batching still works
+```
+
+Want to use LM Studio?
+```python
+from quick_vllm import VLLMClient
+
+lms_client = quick_vllm.VLLMClient(
+    host="192.168.1.169",
+    port=1234,
+)
+
+example_list = [
+    "Hi.",
+    "How are you?",
+]
+
+scheduled_actions = lms_client.send_async(example_list)
+
+for idx, action in enumerate(scheduled_actions):
+    gotten = action.get()
+    print(f"Scheduled Action {idx}: {gotten}")
 ```
 
 Both the functional helpers and the class share the *same* cache directory, so
