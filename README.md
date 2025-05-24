@@ -74,9 +74,13 @@ convenience wrapper `send_async`:
 
 ```python
 handle = send(msgs, async_=True)
-responses = handle.get()
-# Equivalent
-responses2 = send_async(msgs).get()
+
+# Fetch them all at once
+all_responses = handle.get()
+
+# Or grab each one as soon as it's ready
+for resp in send_async(msgs):
+    print(resp.get())
 ```
 
 ### 2 • Object-oriented client
