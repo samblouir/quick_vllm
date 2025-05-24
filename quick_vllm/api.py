@@ -338,17 +338,49 @@ pass
 
 
 
+class _AsyncSendItem:
+    """Wrapper around :class:`multiprocessing.pool.AsyncResult`."""
+
+    def __init__(self, async_result, parent):
+        self._async_result = async_result
+        self._parent = parent
+        self._value = None
+        self._retrieved = False
+
+    def get(self, *args, **kwargs):
+        if not self._retrieved:
+            self._value = self._async_result.get(*args, **kwargs)
+            self._retrieved = True
+            self._parent._item_done()
+        return self._value
+
+
 class _AsyncSendResult:
     """Handle for asynchronous :func:`send` calls."""
 
-    def __init__(self, async_result, pool):
-        self._async_result = async_result
+    def __init__(self, async_results, pool):
         self._pool = pool
+        self._items = [_AsyncSendItem(r, self) for r in async_results]
+        self._pending = len(self._items)
+
+    # --------------------------------------------------------------
+    def _item_done(self) -> None:
+        self._pending -= 1
+        if self._pending == 0:
+            self._pool.join()
+
+    # --------------------------------------------------------------
+    def __iter__(self):
+        return iter(self._items)
+
+    def __len__(self):
+        return len(self._items)
+
+    def __getitem__(self, idx):
+        return self._items[idx]
 
     def get(self, *args, **kwargs):
-        result = self._async_result.get(*args, **kwargs)
-        self._pool.join()
-        return result
+        return [item.get(*args, **kwargs) for item in self._items]
 
 
 def send(
@@ -370,9 +402,12 @@ def send(
     msgs_with_kwargs = [dict(msg=msg, kwargs=current_call_kwargs) for msg in msgs]
 
     if async_:
-        async_result = pool.map_async(_batch_send_message_wrapper, msgs_with_kwargs)
+        async_results = [
+            pool.apply_async(_batch_send_message_wrapper, (d,))
+            for d in msgs_with_kwargs
+        ]
         pool.close()
-        return _AsyncSendResult(async_result, pool)
+        return _AsyncSendResult(async_results, pool)
 
     responses = pool.map(_batch_send_message_wrapper, msgs_with_kwargs)
     pool.close()

@@ -222,6 +222,19 @@ class TestCacheFunctionality(unittest.TestCase):
         self.assertEqual(async_result_2, sync_result)
         self.assertEqual(async_result, [f"resp_{m}" for m in messages])
 
+    def test_async_send_individual_get(self):
+        messages = ["a", "b", "c"]
+
+        def fake_wrapper(d):
+            return f"resp_{d['msg']}"
+
+        with patch("quick_vllm.api._batch_send_message_wrapper", side_effect=fake_wrapper), \
+             patch("multiprocessing.Pool", mp.pool.ThreadPool):
+            handle = api.send_async(messages)
+            results = [item.get() for item in handle]
+
+        self.assertEqual(results, [f"resp_{m}" for m in messages])
+
 
 if __name__ == '__main__':
     unittest.main()

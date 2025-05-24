@@ -182,9 +182,11 @@ class VLLMClient:
         args = [{**common, "msg": m} for m in msgs]
 
         if async_:
-            async_result = pool.map_async(_worker_send_wrapper, args)
+            async_results = [
+                pool.apply_async(_worker_send_wrapper, (a,)) for a in args
+            ]
             pool.close()
-            return _AsyncSendResult(async_result, pool)
+            return _AsyncSendResult(async_results, pool)
 
         try:
             return pool.map(_worker_send_wrapper, args)
