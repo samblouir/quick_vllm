@@ -166,6 +166,7 @@ class VLLMClient:
         *,
         max_pool_size: int | None = None,
         async_: bool = False,
+        stream_print: bool = False,
         **kwargs: Any,
     ) -> list[Any] | Any:
         """Multiprocessing batch helper (now pickle‑safe)."""
@@ -181,10 +182,14 @@ class VLLMClient:
             "port": self.port,
             "mdl": self._model_id(),
             "dsp": self.default_sampling_parameters,
-            "kwargs": kwargs,
         }
 
-        args = [{**common, "msg": m} for m in msgs]
+        args = []
+        for idx, m in enumerate(msgs):
+            kw = dict(kwargs)
+            if stream_print and "silent" not in kw:
+                kw["silent"] = idx != 0
+            args.append({**common, "msg": m, "kwargs": kw})
 
         if async_:
             async_results = [
@@ -204,6 +209,7 @@ class VLLMClient:
         msgs: str | Iterable[str],
         *,
         max_pool_size: int | None = None,
+        stream_print: bool = False,
         **kwargs: Any,
     ) -> _AsyncSendResult:
         """Convenience wrapper for :meth:`send` with ``async_=True``."""
@@ -211,6 +217,7 @@ class VLLMClient:
             msgs,
             max_pool_size=max_pool_size,
             async_=True,
+            stream_print=stream_print,
             **kwargs,
         )
 

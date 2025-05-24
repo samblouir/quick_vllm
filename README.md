@@ -65,6 +65,7 @@ responses = send(
     top_p=0.95,
     n=4,                 # generate 4 responses per prompt
     just_return_text=1,  # -> list[str] instead of list[dict]
+    stream_print=True,   # stream-print tokens for the first prompt
 )
 print(responses)
 ```
@@ -98,7 +99,7 @@ print(east.send_message("Ping east", just_return_text=True))
 print(west.send_message("Ping west", just_return_text=True))
 
 batch = ["Explain quantum tunnelling in 2 lines.", "Write a haiku about GPU fans."]
-print(east.send(batch, just_return_text=True))        # multiprocess batching still works
+print(east.send(batch, just_return_text=True, stream_print=True))        # multiprocess batching still works
 ```
 
 Want to use LM Studio?
