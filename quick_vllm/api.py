@@ -1,5 +1,6 @@
 from openai import OpenAI
 import multiprocessing as mp
+from multiprocessing import pool as mp_pool
 import os
 import traceback
 import base64
@@ -396,7 +397,13 @@ def send(
         msgs = [msgs]
 
     max_pool_size = min(max_pool_size, len(msgs))
-    pool = mp.Pool(processes=max_pool_size)
+
+    # Use threads when asynchronous streaming is requested so that
+    # tokens printed by worker tasks appear in the main console.
+    if async_ and stream_print:
+        pool = mp_pool.ThreadPool(processes=max_pool_size)
+    else:
+        pool = mp.Pool(processes=max_pool_size)
 
     # Include cache_dir in the kwargs for each message
     current_call_kwargs = {**kwargs, "cache_dir": cache_dir}

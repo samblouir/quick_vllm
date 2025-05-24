@@ -14,6 +14,7 @@ import base64
 import copy
 import datetime as _dt
 import multiprocessing as mp
+from multiprocessing import pool as mp_pool
 import os
 import time
 from typing import Any, Iterable
@@ -175,7 +176,13 @@ class VLLMClient:
             msgs = [msgs]
 
         max_pool_size = min(max_pool_size or mp.cpu_count(), len(msgs))
-        pool = mp.Pool(processes=max_pool_size)
+
+        # Use threads when asynchronous streaming is requested so that
+        # tokens printed by worker tasks appear in the main console.
+        if async_ and stream_print:
+            pool = mp_pool.ThreadPool(processes=max_pool_size)
+        else:
+            pool = mp.Pool(processes=max_pool_size)
 
         # shared data passed to every worker (must be pickleable)
         common = {
