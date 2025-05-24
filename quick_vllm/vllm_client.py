@@ -195,8 +195,10 @@ class VLLMClient:
         args = []
         for idx, m in enumerate(msgs):
             kw = dict(kwargs)
-            if stream_print and "silent" not in kw:
-                kw["silent"] = idx != 0
+            if stream_print:
+                kw.setdefault("stream", True)
+                if "silent" not in kw:
+                    kw["silent"] = idx != 0
             args.append({**common, "msg": m, "kwargs": kw})
 
         if async_:

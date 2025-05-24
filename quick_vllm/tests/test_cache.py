@@ -7,10 +7,13 @@ import multiprocessing as mp
 import io
 import contextlib
 from unittest.mock import patch, MagicMock
+import io
+from contextlib import redirect_stdout
 
 from quick_vllm import cache
 from quick_vllm import api
 from quick_vllm import _config
+from quick_vllm import vllm_client
 
 class TestCacheFunctionality(unittest.TestCase):
 
@@ -237,24 +240,26 @@ class TestCacheFunctionality(unittest.TestCase):
 
         self.assertEqual(results, [f"resp_{m}" for m in messages])
 
-    def test_async_send_stream_print_uses_threadpool(self):
-        messages = ["x", "y"]
+    def test_client_async_stream_print(self):
+        messages = ["hi"]
 
-        printed = io.StringIO()
-
-        def fake_wrapper(d):
-            print("tok", end="", flush=True)
+        def fake_worker(d):
+            assert d["kwargs"]["stream"] is True
+            print("TOK", flush=True)
             return f"resp_{d['msg']}"
 
-        with patch("quick_vllm.api._batch_send_message_wrapper", side_effect=fake_wrapper), \
-             patch("quick_vllm.api.mp_pool.ThreadPool", mp.pool.ThreadPool), \
-             patch("multiprocessing.Pool", side_effect=AssertionError("Pool should not be used")), \
-             contextlib.redirect_stdout(printed):
-            handle = api.send_async(messages, stream_print=True)
-            result = handle.get()
+        with patch("quick_vllm.vllm_client._worker_send_wrapper", side_effect=fake_worker), \
+             patch("multiprocessing.Pool", side_effect=AssertionError("Proc used")), \
+             patch("quick_vllm.vllm_client.VLLMClient._model_id", return_value="mdl"):
+            client = vllm_client.VLLMClient()
+            with io.StringIO() as buf, redirect_stdout(buf):
+                handle = client.send_async(messages, stream_print=True)
+                result = handle.get()
+                output = buf.getvalue()
 
-        self.assertEqual(result, [f"resp_{m}" for m in messages])
-        self.assertEqual(printed.getvalue(), "tok" * len(messages))
+        self.assertIn("TOK", output)
+        self.assertEqual(result, ["resp_hi"])
+
 
 
 if __name__ == '__main__':

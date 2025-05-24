@@ -411,8 +411,10 @@ def send(
     msgs_with_kwargs = []
     for idx, msg in enumerate(msgs):
         item_kwargs = dict(current_call_kwargs)
-        if stream_print and "silent" not in item_kwargs:
-            item_kwargs["silent"] = idx != 0
+        if stream_print:
+            item_kwargs.setdefault("stream", True)
+            if "silent" not in item_kwargs:
+                item_kwargs["silent"] = idx != 0
         msgs_with_kwargs.append(dict(msg=msg, kwargs=item_kwargs))
 
     if async_:
