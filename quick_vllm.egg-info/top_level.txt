@@ -1,1 +1,3 @@
+numpy
+openai
 quick_vllm

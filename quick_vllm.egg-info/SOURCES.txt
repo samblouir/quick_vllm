@@ -1,6 +1,8 @@
 LICENSE
 README.md
 pyproject.toml
+numpy/__init__.py
+openai/__init__.py
 quick_vllm/__init__.py
 quick_vllm/_config.py
 quick_vllm/api.py

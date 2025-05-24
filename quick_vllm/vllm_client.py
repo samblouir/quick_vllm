@@ -235,7 +235,7 @@ class VLLMClient:
         cache_key = {k: v for k, v in settings.items() if k != "stream"}
         cache_path = cache.quick_hash(cache_key)
 
-        if not (force_cache_miss or int(arg_dict.get("disable_cache", 0))):
+        if not (force_cache_miss or int(arg_dict.get("disable_cache", 0)) or int(arg_dict.get("force_cache_miss", 0))):
             try:
                 cached = cache.quick_load(cache_path)
                 if isinstance(cached, list) and cached:
@@ -264,7 +264,8 @@ class VLLMClient:
                         if choice.delta.content is not None:
                             chunks.setdefault(choice.index, []).append(choice.delta.content)
                         if not silent:
-                            print_chat(chunks)
+                            print(chunk.choices[0].delta.content, end="", flush=True)
+                            # print_chat(chunks)
                         continue
                     break
                 except Exception as exc:

@@ -132,9 +132,9 @@ you can mix and match freely.
 
 | Flag / env var         | Effect                                                        |
 | ---------------------- | ------------------------------------------------------------- |
-| `--port 8000`          | Point *functional* helpers (`send`, …) at a different port.   |
-| `--force_cache_miss 1` | Ignore cached generations *and* overwrite with fresh results. |
-| `--disable_cache 1`    | Bypass cache entirely (no load, no save).                     |
+| `port 8000`          | Point helpers (`send`, …) at a different port. (Affects *functional*, not *object-oriented* calls)   |
+| `force_cache_miss 1` | Ignore cached generations *and* overwrite with fresh results. |
+| `disable_cache 1`    | Bypass cache entirely (no load, no save).                     |
 
 > **Note**
 > For `VLLMClient` objects just pass `port` / `host` to the constructor. The
