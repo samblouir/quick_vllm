@@ -21,6 +21,7 @@ from openai import OpenAI
 
 from quick_vllm import cache  # type: ignore
 from quick_vllm.utils import arg_dict  # type: ignore
+from quick_vllm.api import _AsyncSendResult
 
 __all__ = ["VLLMClient"]
 
@@ -159,8 +160,9 @@ class VLLMClient:
         msgs: str | Iterable[str],
         *,
         max_pool_size: int | None = None,
+        async_: bool = False,
         **kwargs: Any,
-    ) -> list[Any]:
+    ) -> list[Any] | Any:
         """Multiprocessing batch helper (now pickle‑safe)."""
         if isinstance(msgs, str):
             msgs = [msgs]
@@ -177,12 +179,33 @@ class VLLMClient:
             "kwargs": kwargs,
         }
 
+        args = [{**common, "msg": m} for m in msgs]
+
+        if async_:
+            async_result = pool.map_async(_worker_send_wrapper, args)
+            pool.close()
+            return _AsyncSendResult(async_result, pool)
+
         try:
-            args = [{**common, "msg": m} for m in msgs]
             return pool.map(_worker_send_wrapper, args)
         finally:
             pool.close()
             pool.join()
+
+    def send_async(
+        self,
+        msgs: str | Iterable[str],
+        *,
+        max_pool_size: int | None = None,
+        **kwargs: Any,
+    ) -> _AsyncSendResult:
+        """Convenience wrapper for :meth:`send` with ``async_=True``."""
+        return self.send(
+            msgs,
+            max_pool_size=max_pool_size,
+            async_=True,
+            **kwargs,
+        )
 
     # ------------------------------------------------------------------
     # Core request logic
