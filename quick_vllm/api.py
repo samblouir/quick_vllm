@@ -1,5 +1,6 @@
 from openai import OpenAI
 import multiprocessing as mp
+from multiprocessing import pool as mp_pool
 import os
 import traceback
 import base64
@@ -396,7 +397,13 @@ def send(
         msgs = [msgs]
 
     max_pool_size = min(max_pool_size, len(msgs))
-    pool = mp.Pool(processes=max_pool_size)
+
+    # Use threads when asynchronous streaming is requested so that
+    # tokens printed by worker tasks appear in the main console.
+    if async_ and stream_print:
+        pool = mp_pool.ThreadPool(processes=max_pool_size)
+    else:
+        pool = mp.Pool(processes=max_pool_size)
 
     # Include cache_dir in the kwargs for each message
     current_call_kwargs = {**kwargs, "cache_dir": cache_dir}
@@ -404,8 +411,10 @@ def send(
     msgs_with_kwargs = []
     for idx, msg in enumerate(msgs):
         item_kwargs = dict(current_call_kwargs)
-        if stream_print and "silent" not in item_kwargs:
-            item_kwargs["silent"] = idx != 0
+        if stream_print:
+            item_kwargs.setdefault("stream", True)
+            if "silent" not in item_kwargs:
+                item_kwargs["silent"] = idx != 0
         msgs_with_kwargs.append(dict(msg=msg, kwargs=item_kwargs))
 
     if async_:

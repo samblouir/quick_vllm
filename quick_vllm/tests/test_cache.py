@@ -5,10 +5,13 @@ import tempfile
 import pickle
 import multiprocessing as mp
 from unittest.mock import patch, MagicMock
+import io
+from contextlib import redirect_stdout
 
 from quick_vllm import cache
 from quick_vllm import api
 from quick_vllm import _config
+from quick_vllm import vllm_client
 
 class TestCacheFunctionality(unittest.TestCase):
 
@@ -234,6 +237,26 @@ class TestCacheFunctionality(unittest.TestCase):
             results = [item.get() for item in handle]
 
         self.assertEqual(results, [f"resp_{m}" for m in messages])
+
+    def test_client_async_stream_print(self):
+        messages = ["hi"]
+
+        def fake_worker(d):
+            assert d["kwargs"]["stream"] is True
+            print("TOK", flush=True)
+            return f"resp_{d['msg']}"
+
+        with patch("quick_vllm.vllm_client._worker_send_wrapper", side_effect=fake_worker), \
+             patch("multiprocessing.Pool", side_effect=AssertionError("Proc used")), \
+             patch("quick_vllm.vllm_client.VLLMClient._model_id", return_value="mdl"):
+            client = vllm_client.VLLMClient()
+            with io.StringIO() as buf, redirect_stdout(buf):
+                handle = client.send_async(messages, stream_print=True)
+                result = handle.get()
+                output = buf.getvalue()
+
+        self.assertIn("TOK", output)
+        self.assertEqual(result, ["resp_hi"])
 
 
 if __name__ == '__main__':
