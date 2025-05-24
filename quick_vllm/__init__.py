@@ -15,6 +15,7 @@ Object-oriented client
 
 from .api import (
     send,
+    send_async,
     send_message,
     send_message_no_cache,
     encode_image,
@@ -27,6 +28,7 @@ from .vllm_client import VLLMClient
 __all__ = [
     # functional API
     "send",
+    "send_async",
     "send_message",
     "send_message_no_cache",
     "encode_image",

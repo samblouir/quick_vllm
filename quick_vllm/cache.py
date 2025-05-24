@@ -10,7 +10,30 @@ from quick_vllm import _config
 import collections.abc
 import hashlib
 import json
-import numpy as np
+try:
+    import numpy as np
+except Exception:  # pragma: no cover - optional dependency
+    import random as _random
+
+    class _DummyRNG:
+        def __init__(self, seed):
+            self._rand = _random.Random(seed)
+
+        def random(self):
+            return self._rand.random()
+
+        def integers(self, low, high=None):
+            if high is None:
+                low, high = 0, low
+            return self._rand.randint(low, high - 1)
+
+    class _DummyNP:
+        class random:
+            @staticmethod
+            def default_rng(seed=None):
+                return _DummyRNG(seed)
+
+    np = _DummyNP()
 import os
 import pickle
 import threading
