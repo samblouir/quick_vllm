@@ -12,6 +12,18 @@ Functional helpers
 Object-oriented client
     VLLMClient                – from :pymod:`quick_vllm.vllm_client`
 """
+import sys
+
+# ---------------------------------------------------------------------------
+# macOS uses the 'spawn' start method by default which breaks pooling in this
+# package. Switch to 'fork' if running on a Mac.
+if sys.platform == "darwin":
+    import multiprocessing as mp
+    try:  # set_start_method() can only be called once per session
+        mp.set_start_method("fork")
+    except RuntimeError:
+        pass
+
 
 from .api import (
     send,

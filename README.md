@@ -24,6 +24,9 @@ Welcome to **quick VLLM**, a slim Python wrapper that makes talking to a
 pip install --upgrade vllm
 pip install git+https://github.com/SamBlouir/quick_vllm.git
 ````
+### macOS
+On macOS the default multiprocessing start method is `spawn`. `quick_vllm` now automatically switches to `fork` so that pooling works correctly.
+
 
 ---
 
