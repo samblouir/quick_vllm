@@ -23,13 +23,27 @@ from quick_vllm.utils import arg_dict  # type: ignore
 # ---------------------------------------------------------------------
 # Tokenizer (Hugging Face required)
 # ---------------------------------------------------------------------
-try:
-    from transformers import AutoTokenizer
-except ImportError as exc:  # noqa: N818 – sentinel
-    raise ImportError(
-        "Hugging Face `transformers` is required – "
-        "pip install transformers>=4.40"
-    ) from exc
+import os
+
+if os.getenv("QUICK_VLLM_DEBUG") == "1":
+    class AutoTokenizer:  # pragma: no cover - debug stub
+        @classmethod
+        def from_pretrained(cls, *args, **kwargs):
+            return cls()
+
+        def encode(self, *args, **kwargs):
+            return [0]
+
+        def decode(self, *args, **kwargs):
+            return "Hello World"
+else:
+    try:
+        from transformers import AutoTokenizer
+    except ImportError as exc:  # noqa: N818 – sentinel
+        raise ImportError(
+            "Hugging Face `transformers` is required – "
+            "pip install transformers>=4.40"
+        ) from exc
 
 __all__ = ["VLLMClient"]
 

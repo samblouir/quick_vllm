@@ -14,6 +14,9 @@ import sys
 
 __all__ = ["OpenAI"]
 
+_DEBUG = os.getenv("QUICK_VLLM_DEBUG") == "1"
+
+
 def _load_real_openai():
     """Attempt to import the real ``openai`` package.
 
@@ -35,16 +38,68 @@ def _load_real_openai():
     return True
 
 
-if not _load_real_openai():
+if _DEBUG or not _load_real_openai():
+    class _DummyDelta:
+        def __init__(self, content="Hello World"):
+            self.content = content
+
+    class _DummyMessage:
+        def __init__(self, content="Hello World"):
+            self.content = content
+
+    class _DummyChoice:
+        def __init__(self, content="Hello World"):
+            self.index = 0
+            self.delta = _DummyDelta(content)
+            self.message = _DummyMessage(content)
+            self.finish_reason = "stop"
+            self.stop_reason = "stop"
+
+    class _DummyChunk:
+        def __init__(self, content="Hello World"):
+            self.choices = [_DummyChoice(content)]
+
+    class _DummyCompletion:
+        def __init__(self, stream: bool = True, content: str = "Hello World"):
+            self._stream = stream
+            self._content = content
+            self._yielded = False
+            self.choices = [_DummyChoice(content)]
+
+        def __iter__(self):
+            self._yielded = False
+            return self
+
+        def __next__(self):
+            if not self._stream or self._yielded:
+                raise StopIteration
+            self._yielded = True
+            return _DummyChunk(self._content)
+
     class OpenAI:  # pragma: no cover - used only when real package unavailable
         def __init__(self, *args, **kwargs):
-            pass
+            self.chat = type(
+                "chat",
+                (),
+                {
+                    "completions": type(
+                        "completions",
+                        (),
+                        {
+                            "create": staticmethod(
+                                lambda *a, **kw: _DummyCompletion(
+                                    kw.get("stream", True)
+                                )
+                            )
+                        },
+                    )(),
+                },
+            )()
 
-        class chat:
-            class completions:
-                @staticmethod
-                def create(*args, **kwargs):
-                    raise RuntimeError("OpenAI stub not functional")
+        class _Models:
+            @staticmethod
+            def list():
+                return [type("model", (), {"id": "debug-model"})()]
 
         def models(self):
-            return type("models", (), {"list": lambda self: []})()
+            return self._Models()
